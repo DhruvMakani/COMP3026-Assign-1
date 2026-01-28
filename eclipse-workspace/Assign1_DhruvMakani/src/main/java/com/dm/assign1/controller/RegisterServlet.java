@@ -1,5 +1,6 @@
 package com.dm.assign1.controller;
 
+import com.dm.assign1.dao.RegisterDao;         
 import com.dm.assign1.model.RegisterationForm;
 
 import jakarta.servlet.ServletException;
@@ -13,7 +14,13 @@ import java.io.IOException;
 
 public class RegisterServlet extends HttpServlet {
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    private RegisterDao registerDao;
+
+    public void init() {
+        registerDao = new RegisterDao();
+    }
+
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         RegisterationForm form = new RegisterationForm();
@@ -26,24 +33,28 @@ public class RegisterServlet extends HttpServlet {
         form.setZip(request.getParameter("zip"));
         form.setEmail(request.getParameter("email"));
         form.setSex(request.getParameter("sex"));
-        form.setLanguage(request.getParameter("language"));
+
+        String[] languages = request.getParameterValues("language");
+        if (languages != null)
+            form.setLanguage(String.join(",", languages));
+
         form.setAbout(request.getParameter("about"));
 
         boolean error = false;
 
-        if (form.getUserId().length() < 5 || form.getUserId().length() > 12)
+        if (form.getUserId() == null || form.getUserId().length() < 5 || form.getUserId().length() > 12)
             error = true;
 
-        if (form.getPassword().length() < 7 || form.getPassword().length() > 12)
+        if (form.getPassword() == null || form.getPassword().length() < 7 || form.getPassword().length() > 12)
             error = true;
 
-        if (!form.getName().matches("[A-Za-z ]+"))
+        if (form.getName() == null || !form.getName().matches("[A-Za-z ]+"))
             error = true;
 
-        if (!form.getZip().matches("\\d+"))
+        if (form.getZip() == null || !form.getZip().matches("\\d+"))
             error = true;
 
-        if (!form.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
+        if (form.getEmail() == null || !form.getEmail().matches("^[\\w.-]+@[\\w.-]+\\.\\w+$"))
             error = true;
 
         if (form.getCountry().equals("select"))
@@ -58,6 +69,13 @@ public class RegisterServlet extends HttpServlet {
         if (error) {
             request.setAttribute("error", "Validation Failed");
             request.getRequestDispatcher("index.jsp").forward(request, response);
+        } else {
+            try {
+                registerDao.insertUser(form);
+                response.sendRedirect("success.jsp");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 }

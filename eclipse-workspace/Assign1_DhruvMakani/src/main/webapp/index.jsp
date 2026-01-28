@@ -12,7 +12,7 @@
 <body>
 <h2>Registration Form</h2>
 
-<form action="register" method="post">
+<form action="registerservlet" method="post">
 
 User ID:
 <input type="text" name="userid" required />
